@@ -1,11 +1,9 @@
 # ===================================================================
-# Script de Deploy COMPLETO - Mottu Location na Azure
-# Cria a infraestrutura, compila o código e faz o deploy.
+# Script de Deploy COMPLETO e Autossuficiente - Mottu Location
+# Compila, registra serviços, cria a infraestrutura e faz o deploy.
 # ===================================================================
 
-# --- PASSO 1: DEFINIÇÃO DE VARIÁVEIS (JÁ ESCOLHIDAS PARA VOCÊ) ---
-# Usamos o RM para garantir nomes únicos.
-
+# --- PASSO 1: DEFINIÇÃO DE VARIÁVEIS ---
 $RM="555317" # Seu RM para garantir nomes únicos
 $RESOURCE_GROUP="rg-motolocation-$RM"
 $LOCATION="brazilsouth"
@@ -28,15 +26,24 @@ echo "PASSO 3: Fazendo login na Azure..."
 echo "--------------------------------------------------------"
 az login
 
-# --- PASSO 4: CRIAR O GRUPO DE RECURSOS ---
+# --- PASSO 4: REGISTRAR OS PROVEDORES DE SERVIÇO (NOVO) ---
+# Garante que sua assinatura pode criar os recursos necessários.
+# Só precisa ser feito uma vez, mas é seguro rodar sempre.
 echo "--------------------------------------------------------"
-echo "PASSO 4: Criando o Grupo de Recursos: $RESOURCE_GROUP"
+echo "PASSO 4: Registrando os provedores de serviço na Azure..."
+echo "--------------------------------------------------------"
+az provider register --namespace Microsoft.DBforPostgreSQL
+az provider register --namespace Microsoft.Web
+
+# --- PASSO 5: CRIAR O GRUPO DE RECURSOS ---
+echo "--------------------------------------------------------"
+echo "PASSO 5: Criando o Grupo de Recursos: $RESOURCE_GROUP"
 echo "--------------------------------------------------------"
 az group create --name $RESOURCE_GROUP --location $LOCATION
 
-# --- PASSO 5: CRIAR O SERVIDOR POSTGRESQL ---
+# --- PASSO 6: CRIAR O SERVIDOR POSTGRESQL ---
 echo "--------------------------------------------------------"
-echo "PASSO 5: Criando o Servidor PostgreSQL: $POSTGRES_SERVER_NAME."
+echo "PASSO 6: Criando o Servidor PostgreSQL: $POSTGRES_SERVER_NAME."
 echo "(Esta etapa pode levar de 5 a 10 minutos...)"
 echo "--------------------------------------------------------"
 az postgres flexible-server create `
@@ -51,18 +58,18 @@ az postgres flexible-server create `
     --storage-size 32 `
     --version 15
 
-# --- PASSO 6: CRIAR O BANCO DE DADOS ---
+# --- PASSO 7: CRIAR O BANCO DE DADOS ---
 echo "--------------------------------------------------------"
-echo "PASSO 6: Criando o banco de dados '$POSTGRES_DB_NAME'..."
+echo "PASSO 7: Criando o banco de dados '$POSTGRES_DB_NAME'..."
 echo "--------------------------------------------------------"
 az postgres flexible-server db create `
     --resource-group $RESOURCE_GROUP `
     --server-name $POSTGRES_SERVER_NAME `
     --database-name $POSTGRES_DB_NAME
 
-# --- PASSO 7: CRIAR O PLANO DE SERVIÇO DE APLICATIVO ---
+# --- PASSO 8: CRIAR O PLANO DE SERVIÇO DE APLICATIVO ---
 echo "--------------------------------------------------------"
-echo "PASSO 7: Criando o Plano de Serviço (Gratuito)..."
+echo "PASSO 8: Criando o Plano de Serviço (Gratuito)..."
 echo "--------------------------------------------------------"
 az appservice plan create `
     --name $APPSERVICE_PLAN `
@@ -70,9 +77,9 @@ az appservice plan create `
     --sku F1 `
     --is-linux
 
-# --- PASSO 8: CRIAR A APLICAÇÃO WEB (APP SERVICE) ---
+# --- PASSO 9: CRIAR A APLICAÇÃO WEB (APP SERVICE) ---
 echo "--------------------------------------------------------"
-echo "PASSO 8: Criando a Aplicação Web..."
+echo "PASSO 9: Criando a Aplicação Web..."
 echo "--------------------------------------------------------"
 az webapp create `
     --name $WEBAPP_NAME `
@@ -80,9 +87,9 @@ az webapp create `
     --plan $APPSERVICE_PLAN `
     --runtime "JAVA:17-java17"
 
-# --- PASSO 9: CONFIGURAR A CONEXÃO COM O BANCO ---
+# --- PASSO 10: CONFIGURAR A CONEXÃO COM O BANCO ---
 echo "--------------------------------------------------------"
-echo "PASSO 9: Configurando as variáveis de ambiente na aplicação..."
+echo "PASSO 10: Configurando as variáveis de ambiente na aplicação..."
 echo "--------------------------------------------------------"
 $DB_URL="jdbc:postgresql://$POSTGRES_SERVER_NAME.postgres.database.azure.com:5432/$POSTGRES_DB_NAME?sslmode=require"
 $DB_USER="$POSTGRES_ADMIN_USER@$POSTGRES_SERVER_NAME"
@@ -96,9 +103,9 @@ az webapp config appsettings set `
         "DB_USER=$DB_USER" `
         "DB_PASS=$POSTGRES_ADMIN_PASSWORD"
 
-# --- PASSO 10: DEPLOY DA APLICAÇÃO JAVA ---
+# --- PASSO 11: DEPLOY DA APLICAÇÃO JAVA ---
 echo "--------------------------------------------------------"
-echo "PASSO 10: Fazendo o deploy do arquivo .jar para o App Service..."
+echo "PASSO 11: Fazendo o deploy do arquivo .jar para o App Service..."
 echo "--------------------------------------------------------"
 az webapp deploy `
     --resource-group $RESOURCE_GROUP `
