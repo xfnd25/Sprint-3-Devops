@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="common_header(title)">
+    <meta charset="UTF-8">
+    <title th:text="${title} + ' - Mottu Location'">Título Padrão</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f8f9fa; }
+        .navbar { background-color: #343a40; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .navbar a { color: white; text-decoration: none; }
+        .navbar .brand { font-size: 1.5rem; font-weight: bold; }
+        .navbar .user-info span { margin-right: 1rem; }
+        .logout-button { background: none; border: 1px solid white; color: white; cursor: pointer; font-size: 1rem; padding: 5px 10px; border-radius: 4px; }
+        .container { padding: 2rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #dddddd; text-align: left; padding: 12px; }
+        thead { background-color: #f2f2f2; }
+        .actions a { margin-right: 10px; text-decoration: none; }
+        .add-button { display: inline-block; margin-bottom: 1rem; padding: 0.7rem 1.5rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+        .pagination { margin-top: 1rem; }
+        .pagination a { margin: 0 5px; text-decoration: none; }
+        .form-container { width: 500px; border: 1px solid #ccc; padding: 2rem; border-radius: 8px; margin: auto; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; }
+        .form-group input { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        .form-actions { display: flex; justify-content: space-between; }
+        .form-actions button { padding: 0.7rem 1.5rem; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .form-actions a { text-decoration: none; padding: 0.7rem 1.5rem; background-color: #6c757d; color: white; border-radius: 4px; }
+        .error-message { color: #dc3545; font-size: 0.9em; margin-top: 4px; }
+    </style>
+</head>
+<body>
+<nav class="navbar" th:fragment="navbar">
+    <div>
+        <a class="brand" th:href="@{/web/motos}">Mottu Location</a>
+        <a th:href="@{/web/motos}" style="margin-left: 2rem;">Motos</a>
+        <a th:href="@{/web/sensores}" style="margin-left: 1rem;">Sensores</a>
+        <a th:href="@{/web/movimentacoes/new}" style="margin-left: 1rem;">Registrar Movimentação</a>
+    </div>
+    <div class="user-info">
+        <span>Olá, <strong sec:authentication="name">Usuário</strong>!</span>
+        <form th:action="@{/logout}" method="post" style="display: inline; margin-left: 1rem;">
+            <button type="submit" class="logout-button">Sair</button>
+        </form>
+    </div>
+</nav>
+</body>
+</html>
