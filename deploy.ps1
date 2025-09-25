@@ -6,7 +6,7 @@
 # --- PASSO 1: DEFINIÇÃO DE VARIÁVEIS ---
 $RM="555317" # Seu RM para garantir nomes únicos
 $RESOURCE_GROUP="rg-motolocation-$RM"
-$LOCATION="eastus2"
+$LOCATION="westus"
 $APPSERVICE_PLAN="plan-motolocation-$RM"
 $POSTGRES_SERVER_NAME="pgsrv-motolocation-$RM"
 $POSTGRES_DB_NAME="motolocation"
