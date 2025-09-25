@@ -16,7 +16,6 @@
 
     <properties>
         <java.version>17</java.version>
-        <!-- LINHA ADICIONADA PARA GARANTIR A INICIALIZAÇÃO CORRETA NA AZURE -->
         <start-class>com.mottu.motolocation.MotolocationApplication</start-class>
     </properties>
 
@@ -82,6 +81,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <layout>JAR</layout>
+                </configuration>
             </plugin>
         </plugins>
     </build>
