@@ -73,8 +73,8 @@ Este guia descreve como provisionar toda a infraestrutura na Azure e publicar a 
     O script irá compilar o projeto, pedir seu login na Azure, criar todos os recursos na nuvem, configurar as variáveis de ambiente e publicar a aplicação.
     ```powershell
     ./deploy.ps1
-    Observação, a tela de Login vai abrir atras do InteliJ, ou colada com o terminal no qual você executou, ou seja, não use o terminal em tela cheia para ver a tela de login.
     ```
+    Observação: A tela de Login vai abrir atras do InteliJ, ou colada com o terminal no qual você executou, ou seja, não use o terminal em tela cheia para ver a tela de login.
     *Aguarde a execução completa (pode levar de 5 a 15 minutos).*
 
 ### Acesso e Credenciais (Após o Deploy)
