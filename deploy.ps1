@@ -108,7 +108,7 @@ echo "--------------------------------------------------------"
 az webapp deploy `
     --resource-group $RESOURCE_GROUP `
     --name $WEBAPP_NAME `
-    --src-path "target/motolocation-0.0.1-SNAPSHOT.jar"
+    --src-path "target/motolocation-0.0.1-SNAPSHOT.jar" `
     --type jar
 
 echo "========================================================"
