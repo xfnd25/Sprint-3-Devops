@@ -5,9 +5,9 @@
 # --- PASSO 1: DEFINIÇÃO DE VARIÁVEIS ---
 $RM="555317"
 $RESOURCE_GROUP="rg-motolocation-$RM"
-$LOCATION="westus" # Região final escolhida
+$LOCATION="westus2" # Usando westus2 como uma região robusta
 $APPSERVICE_PLAN="plan-motolocation-$RM"
-$POSTGES_SERVER_NAME="pgsrv-motolocation-$RM"
+$POSTGRES_SERVER_NAME="pgsrv-motolocation-$RM"
 $POSTGRES_DB_NAME="motolocation"
 $POSTGRES_ADMIN_USER="mottuadmin"
 $POSTGRES_ADMIN_PASSWORD="Challenge_FIAP_2025!"
@@ -38,13 +38,13 @@ echo "PASSO 5: Criando o Grupo de Recursos..."
 echo "--------------------------------------------------------"
 az group create --name $RESOURCE_GROUP --location $LOCATION
 
-# --- PASSO 6: CRIAR O SERVIDOR POSTGRESQL (MAIS SEGURO) ---
+# --- PASSO 6: CRIAR O SERVIDOR POSTGRESQL ---
 echo "--------------------------------------------------------"
 echo "PASSO 6: Criando o Servidor PostgreSQL (pode levar alguns minutos)..."
 echo "--------------------------------------------------------"
 az postgres flexible-server create `
     --resource-group $RESOURCE_GROUP `
-    --name $POSTGES_SERVER_NAME `
+    --name $POSTGRES_SERVER_NAME `
     --location $LOCATION `
     --admin-user $POSTGRES_ADMIN_USER `
     --admin-password $POSTGRES_ADMIN_PASSWORD `
@@ -54,16 +54,26 @@ az postgres flexible-server create `
     --version 15
 
 # --- PASSO 7: CONFIGURAR REGRA DE FIREWALL ---
-# Permite que outros serviços DENTRO da Azure acessem o banco.
+# Permite que outros serviços DENTRO da Azure e o seu IP atual acessem o banco.
 echo "--------------------------------------------------------"
 echo "PASSO 7: Configurando firewall do banco de dados..."
 echo "--------------------------------------------------------"
+# Permite acesso de outros serviços da Azure
 az postgres flexible-server firewall-rule create `
     --resource-group $RESOURCE_GROUP `
-    --name $POSTGES_SERVER_NAME `
+    --name $POSTGRES_SERVER_NAME `
     --rule-name "AllowAzureServices" `
     --start-ip-address "0.0.0.0" `
     --end-ip-address "0.0.0.0"
+
+# Permite acesso do seu computador atual (para usar o DBeaver, por exemplo)
+$MY_IP=$(Invoke-RestMethod -Uri "https://api.ipify.org")
+az postgres flexible-server firewall-rule create `
+    --resource-group $RESOURCE_GROUP `
+    --name $POSTGRES_SERVER_NAME `
+    --rule-name "AllowMyIP" `
+    --start-ip-address $MY_IP `
+    --end-ip-address $MY_IP
 
 # --- PASSO 8: CRIAR O BANCO DE DADOS ---
 echo "--------------------------------------------------------"
@@ -71,7 +81,7 @@ echo "PASSO 8: Criando o banco de dados '$POSTGRES_DB_NAME'..."
 echo "--------------------------------------------------------"
 az postgres flexible-server db create `
     --resource-group $RESOURCE_GROUP `
-    --server-name $POSTGES_SERVER_NAME `
+    --server-name $POSTGRES_SERVER_NAME `
     --database-name $POSTGRES_DB_NAME
 
 # --- PASSO 9: CRIAR O PLANO DE SERVIÇO DE APLICATIVO ---
@@ -94,14 +104,13 @@ az webapp create `
     --plan $APPSERVICE_PLAN `
     --runtime "JAVA:17-java17"
 
-# --- PASSO 11: CONFIGURAR A CONEXÃO COM O BANCO (SINTAXE CORRIGIDA) ---
+# --- PASSO 11: CONFIGURAR A CONEXÃO COM O BANCO ---
 echo "--------------------------------------------------------"
 echo "PASSO 11: Configurando as variáveis de ambiente..."
 echo "--------------------------------------------------------"
-$DB_URL="jdbc:postgresql://$POSTGES_SERVER_NAME.postgres.database.azure.com:5432/$POSTGRES_DB_NAME?sslmode=require"
-$DB_USER="$POSTGRES_ADMIN_USER@$POSTGES_SERVER_NAME"
+$DB_URL="jdbc:postgresql://$POSTGRES_SERVER_NAME.postgres.database.azure.com:5432/$POSTGRES_DB_NAME?sslmode=require"
+$DB_USER="$POSTGRES_ADMIN_USER@$POSTGRES_SERVER_NAME"
 
-# Comando corrigido para uma única linha para evitar erros de parsing do PowerShell
 az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEBAPP_NAME --settings "SPRING_PROFILES_ACTIVE=prod" "DB_URL=$DB_URL" "DB_USER=$DB_USER" "DB_PASS=$POSTGRES_ADMIN_PASSWORD"
 
 # --- PASSO 12: DEPLOY DA APLICAÇÃO JAVA ---
