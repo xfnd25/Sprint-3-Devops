@@ -16,7 +16,7 @@ $WEBAPP_NAME="webapp-motolocation-$RM" # Nome globalmente único
 
 # --- PASSO 2: COMPILAR A APLICAÇÃO JAVA ---
 echo "--------------------------------------------------------"
-echo "PASSO 2: Compilando a aplicação Java com Maven..."
+echo "PASSO 2: Limpando builds antigos (mvn clean) e compilando a aplicação (mvn package)..."
 echo "--------------------------------------------------------"
 ./mvnw clean package -DskipTests
 
@@ -26,9 +26,7 @@ echo "PASSO 3: Fazendo login na Azure..."
 echo "--------------------------------------------------------"
 az login
 
-# --- PASSO 4: REGISTRAR OS PROVEDORES DE SERVIÇO (NOVO) ---
-# Garante que sua assinatura pode criar os recursos necessários.
-# Só precisa ser feito uma vez, mas é seguro rodar sempre.
+# --- PASSO 4: REGISTRAR OS PROVEDORES DE SERVIÇO ---
 echo "--------------------------------------------------------"
 echo "PASSO 4: Registrando os provedores de serviço na Azure..."
 echo "--------------------------------------------------------"
@@ -113,7 +111,7 @@ az webapp deploy `
     --src-path "target/motolocation-0.0.1-SNAPSHOT.jar"
 
 echo "========================================================"
-echo "DEPLOY FINALIZADO COM SUCESSO!"
+echo "DEPLOY FINALIZADO!"
 echo "Aguarde 1-2 minutos para a aplicação iniciar na nuvem."
 echo "Acesse sua aplicação em:"
 echo "http://$WEBAPP_NAME.azurewebsites.net"
