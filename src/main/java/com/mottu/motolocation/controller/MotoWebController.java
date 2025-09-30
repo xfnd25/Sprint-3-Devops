@@ -23,8 +23,6 @@ public class MotoWebController {
         this.movimentacaoService = movimentacaoService;
     }
 
-    // NOVO MÉTODO PARA A PÁGINA INICIAL (RAIZ)
-    // Ele redireciona qualquer acesso a "/" para a nossa lista de motos.
     @GetMapping("/")
     public String index() {
         return "redirect:/web/motos";

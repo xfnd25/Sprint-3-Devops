@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Entity
+@Table(name = "moto") // Especifica o nome da tabela em minúsculas
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,14 +29,14 @@ public class Moto {
     private int ano;
 
     @NotBlank
-    @Column(unique = true, nullable = false)
+    @Column(name = "rfid_tag", unique = true, nullable = false) // Mapeia para a coluna 'rfid_tag'
     private String rfidTag;
 
     private String status;
 
     private String observacoes;
 
-    // RELACIONAMENTO COM Movimentacao (adicionado)
+    // RELACIONAMENTO COM Movimentacao
     @OneToMany(mappedBy = "moto", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Movimentacao> movimentacoes = new ArrayList<>();
 }

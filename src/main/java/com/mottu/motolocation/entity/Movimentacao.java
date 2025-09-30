@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "movimentacao") // Especifica o nome da tabela em minúsculas
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,12 +16,15 @@ public class Movimentacao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
+    @JoinColumn(name = "moto_id", nullable = false) // Mapeia para a coluna 'moto_id'
     private Moto moto;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
+    @JoinColumn(name = "sensor_id", nullable = false) // Mapeia para a coluna 'sensor_id'
     private Sensor sensor;
 
+    @Column(name = "data_hora") // Mapeia para a coluna 'data_hora'
     private LocalDateTime dataHora;
 
     @PrePersist

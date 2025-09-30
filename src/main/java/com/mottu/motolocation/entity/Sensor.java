@@ -4,10 +4,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.util.ArrayList; // Import adicionado
-import java.util.List;      // Import adicionado
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
+@Table(name = "sensor") // Especifica o nome da tabela em minúsculas
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +30,7 @@ public class Sensor {
 
     private String descricao;
 
-    // RELACIONAMENTO ADICIONADO COM A CONFIGURAÇÃO DE CASCATA
+    // RELACIONAMENTO COM Movimentacao
     @OneToMany(mappedBy = "sensor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Movimentacao> movimentacoes = new ArrayList<>();
 }

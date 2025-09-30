@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "USERS") // Usamos "USERS" porque "USER" pode ser uma palavra reservada no Oracle
+@Table(name = "users") // CORRIGIDO: Nome da tabela em minúsculas para corresponder à migration
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
