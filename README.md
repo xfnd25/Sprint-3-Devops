@@ -4,19 +4,19 @@ Integrantes
 RM555317 - Fernando Fontes
 RM556814 - Guilherme Jardim
 
-1. Descrição da Solução
-Este projeto implementa um fluxo de Infraestrutura como Código (IaC) para automatizar o deploy da aplicação web Mottu Location na nuvem da Microsoft Azure. A solução adota uma arquitetura moderna baseada em contêineres, utilizando Docker para empacotar a aplicação, Azure Container Registry (ACR) para armazenar a imagem de forma segura, e Azure Container Instance (ACI) para executar a aplicação em um ambiente isolado e escalável.
+1. Descrição da Solução:
+##Este projeto implementa um fluxo de Infraestrutura como Código (IaC) para automatizar o deploy da aplicação web Mottu Location na nuvem da Microsoft Azure. A solução adota uma arquitetura moderna baseada em contêineres, utilizando Docker para empacotar a aplicação, Azure Container Registry (ACR) para armazenar a imagem de forma segura, e Azure Container Instance (ACI) para executar a aplicação em um ambiente isolado e escalável.
 A aplicação em si é um sistema full-stack desenvolvido com Spring Boot e Thymeleaf, que permite o gerenciamento e rastreamento de uma frota de motocicletas, com os dados persistidos em um banco de dados Azure Database for PostgreSQL.
 
-2. Benefícios para o Negócio
-A automação do deploy e o uso de contêineres trazem benefícios cruciais para o negócio:
+2. Benefícios para o Negócio:
+##A automação do deploy e o uso de contêineres trazem benefícios cruciais para o negócio:
 Agilidade: A criação de um ambiente completo (banco de dados + aplicação em contêiner) é feita em minutos, executando um único script, o que acelera drasticamente o tempo de entrega.
 Portabilidade e Consistência: A "containerização" com Docker garante que a aplicação rode da mesma forma no ambiente do desenvolvedor e na nuvem, eliminando o clássico problema de "funciona na minha máquina".
 Reprodutibilidade: Qualquer desenvolvedor pode recriar a infraestrutura e o ambiente de execução exatos com um único comando, garantindo consistência total.
 Segurança: As credenciais do banco de dados são injetadas de forma segura como variáveis de ambiente no contêiner em tempo de execução, nunca sendo expostas no código-fonte ou na imagem Docker.
 
-4. Arquitetura da Solução na Nuvem
-O projeto utiliza uma arquitetura baseada em contêineres e serviços gerenciados (PaaS) na Azure para otimizar a portabilidade, segurança e gerenciamento. A automação é feita via Azure CLI, que orquestra a criação de todos os recursos.
+4. Arquitetura da Solução na Nuvem:
+##O projeto utiliza uma arquitetura baseada em contêineres e serviços gerenciados (PaaS) na Azure para otimizar a portabilidade, segurança e gerenciamento. A automação é feita via Azure CLI, que orquestra a criação de todos os recursos.
 O fluxo se inicia na máquina do desenvolvedor, onde o Docker cria uma imagem da aplicação. Essa imagem é enviada para o Azure Container Registry (ACR), nosso repositório privado na nuvem. Em paralelo, um banco de dados Azure Database for PostgreSQL é provisionado.
 Finalmente, o Azure Container Instance (ACI) é criado, recebendo a instrução para baixar a imagem do ACR e executá-la. Durante a inicialização, o ACI injeta as credenciais do banco de dados no contêiner, permitindo que a aplicação se conecte e se torne acessível ao usuário final através de uma URL pública.
 
