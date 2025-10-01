@@ -1,14 +1,10 @@
 # ===================================================================
-# Script de Deploy - Versão ACR + ACI com Comentários para Apresentação
+# Script de Deploy - Versão Xeque-Mate Final
 # ===================================================================
 
-# Garante que o script pare imediatamente se qualquer erro inesperado ocorrer.
 $ErrorActionPreference = "Stop"
 
-# --- BLOCO 1: DEFINIÇÃO DE VARIÁVEIS ---
-# "Neste primeiro bloco, definimos todas as variáveis que serão usadas no script.
-# Isso inclui nomes para nossos recursos na nuvem, a localização e as credenciais.
-# Adicionamos um sufixo aleatório para garantir que os nomes sejam sempre únicos e evitar conflitos."
+# --- PASSO 1: DEFINIÇÃO DE VARIÁVEIS ---
 $RM = "555317"
 $RANDOM_SUFFIX = Get-Random -Minimum 1000 -Maximum 9999
 $RESOURCE_GROUP = "rg-container-sprint3-$RM"
@@ -22,92 +18,101 @@ $POSTGRES_ADMIN_USER = "mottuadmin"
 $POSTGRES_ADMIN_PASSWORD = "ChallengeFiap2025!"
 $IMAGE_NAME = "motolocation-app:latest"
 
-# --- BLOCO 2: VERIFICAÇÃO DO AMBIENTE LOCAL ---
-# "Antes de começar, o script verifica se o Docker Desktop, que é um pré-requisito,
-# está realmente rodando na minha máquina. Se não estiver, ele para com uma mensagem de erro."
+# --- PASSO 2: VERIFICAR DOCKER ---
 Write-Host "========================================================" -ForegroundColor Green
-Write-Host "Verificando pré-requisitos (Docker)..."
+Write-Host "Verificando Docker..." -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
-docker info > $null
+docker info > $null 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERRO: O Docker Desktop não parece estar rodando." -ForegroundColor Red
-    Write-Host "Por favor, inicie o Docker Desktop e execute o script novamente." -ForegroundColor Red
+    Write-Host "ERRO: Docker Desktop nao esta rodando!" -ForegroundColor Red
     exit 1
 }
-Write-Host "Docker está rodando!" -ForegroundColor Green
+Write-Host "Docker OK!" -ForegroundColor Green
 
-# --- BLOCO 3: AUTENTICAÇÃO NA AZURE ---
-# "Agora, o script inicia a interação com a nuvem, pedindo meu login na Azure
-# para que ele tenha as permissões necessárias para criar e gerenciar os recursos."
+# --- PASSO 3: LOGIN NA AZURE ---
 Write-Host "========================================================" -ForegroundColor Green
-Write-Host "Autenticando na Azure..."
+Write-Host "Login na Azure..." -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
 az login
 
-# --- BLOCO 4: LIMPEZA DO AMBIENTE ---
-# "Para garantir um deploy limpo, o script primeiro tenta destruir qualquer
-# versão antiga do ambiente que possa existir na nuvem. Se não encontrar nada, ele apenas continua."
+# --- PASSO 4: LIMPAR AMBIENTE ANTIGO ---
 Write-Host "========================================================" -ForegroundColor Green
-Write-Host "Limpando ambiente antigo..."
+Write-Host "Limpando ambiente antigo..." -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
-try {
-    Write-Host "Tentando remover o grupo de recursos '$RESOURCE_GROUP'..." -ForegroundColor Yellow
-    az group delete --name $RESOURCE_GROUP --yes
-    Write-Host "Grupo de recursos antigo destruído com sucesso." -ForegroundColor Green
-} catch {
-    if ($_.Exception.Message -like "*ResourceGroupNotFound*") {
-        Write-Host "Nenhum grupo de recursos antigo para remover. Ótimo!" -ForegroundColor Green
-    } else {
-        throw $_.Exception
-    }
+if (az group exists --name $RESOURCE_GROUP) {
+    Write-Host "Removendo grupo antigo..." -ForegroundColor Yellow
+    az group delete --name $RESOURCE_GROUP --yes --no-wait
+    Write-Host "Exclusao iniciada! Aguardando conclusao..."
+    az group wait --name $RESOURCE_GROUP --deleted
+    Write-Host "Grupo de recursos removido com sucesso." -ForegroundColor Green
+}
+else {
+    Write-Host "Nenhum grupo antigo encontrado." -ForegroundColor Green
 }
 
-# --- BLOCO 5: CRIAÇÃO DA INFRAESTRUTURA ---
-# "Com o ambiente limpo, o script agora começa a construir nossa infraestrutura na Azure.
-# Ele cria o Grupo de Recursos, o servidor de banco de dados PostgreSQL e o Container Registry,
-# que é onde vamos armazenar a imagem da nossa aplicação."
+# --- PASSO 5: CRIAR GRUPO DE RECURSOS ---
 Write-Host "========================================================" -ForegroundColor Green
-Write-Host "Criando infraestrutura na Azure (Grupo, PostgreSQL e ACR)..."
+Write-Host "Criando Resource Group..." -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
 az group create --name $RESOURCE_GROUP --location $LOCATION
-Write-Host "Criando servidor PostgreSQL (pode levar 10-20 min)..." -ForegroundColor Cyan
-az postgres flexible-server create --resource-group $RESOURCE_GROUP --name $POSTGRES_SERVER_NAME --location $LOCATION --admin-user $POSTGRES_ADMIN_USER --admin-password $POSTGRES_ADMIN_PASSWORD --sku-name Standard_B1ms --tier Burstable --storage-size 32 --version 15 --yes
-az postgres flexible-server db create --resource-group $RESOURCE_GROUP --server-name $POSTGRES_SERVER_NAME --database-name $POSTGRES_DB_NAME
+
+# --- PASSO 6: CRIAR POSTGRESQL E ACR ---
+Write-Host "========================================================" -ForegroundColor Green
+Write-Host "Criando PostgreSQL (pode demorar 10-20 min)..." -ForegroundColor Cyan
+Write-Host "========================================================" -ForegroundColor Green
+az postgres flexible-server create `
+    --resource-group $RESOURCE_GROUP `
+    --name $POSTGRES_SERVER_NAME `
+    --location $LOCATION `
+    --admin-user $POSTGRES_ADMIN_USER `
+    --admin-password $POSTGRES_ADMIN_PASSWORD `
+    --sku-name Standard_B1ms `
+    --tier Burstable `
+    --storage-size 32 `
+    --version 15 `
+    --yes
+
+az postgres flexible-server db create `
+    --resource-group $RESOURCE_GROUP `
+    --server-name $POSTGRES_SERVER_NAME `
+    --database-name $POSTGRES_DB_NAME
+
+Write-Host "Configurando firewall do PostgreSQL..." -ForegroundColor Cyan
+az postgres flexible-server firewall-rule create `
+    --resource-group $RESOURCE_GROUP `
+    --name $POSTGRES_SERVER_NAME `
+    --rule-name "AllowAzureServices" `
+    --start-ip-address "0.0.0.0" `
+    --end-ip-address "0.0.0.0"
+
 Write-Host "Criando Azure Container Registry..." -ForegroundColor Cyan
-az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
+az acr create `
+    --resource-group $RESOURCE_GROUP `
+    --name $ACR_NAME `
+    --sku Basic `
+    --admin-enabled true
 
-# --- BLOCO 6: CONFIGURAÇÃO DO FIREWALL ---
-# "Este é um passo crucial de segurança e conectividade. O script adiciona uma regra
-# no firewall do nosso banco de dados para permitir que outros serviços da Azure,
-# como o nosso futuro contêiner, possam se conectar a ele."
+# --- PASSO 7: BUILD E PUSH DA IMAGEM DOCKER ---
 Write-Host "========================================================" -ForegroundColor Green
-Write-Host "Configurando firewall do PostgreSQL..."
-Write-Host "========================================================" -ForegroundColor Green
-az postgres flexible-server firewall-rule create --resource-group $RESOURCE_GROUP --name $POSTGRES_SERVER_NAME --rule-name "AllowAzureServices" --start-ip-address "0.0.0.0" --end-ip-address "0.0.0.0"
-
-# --- BLOCO 7: BUILD E PUSH DA IMAGEM DOCKER ---
-# "Agora, o script usa o Docker na minha máquina para construir a imagem da aplicação,
-# usando nosso Dockerfile. Depois, ele 'carimba' a imagem com o endereço do nosso
-# Container Registry e a envia para a nuvem."
-Write-Host "========================================================" -ForegroundColor Green
-Write-Host "Fazendo build e push da imagem Docker..."
+Write-Host "Build e Push da imagem Docker..." -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
 $ACR_LOGIN_SERVER = az acr show --name $ACR_NAME --query "loginServer" -o tsv
 az acr login --name $ACR_NAME
 docker build -t $IMAGE_NAME .
 docker tag $IMAGE_NAME "$ACR_LOGIN_SERVER/$IMAGE_NAME"
 docker push "$ACR_LOGIN_SERVER/$IMAGE_NAME"
-Write-Host "Imagem Docker enviada para o ACR com sucesso!" -ForegroundColor Green
+Write-Host "Imagem enviada com sucesso!" -ForegroundColor Green
 
-# --- BLOCO 8: CRIAÇÃO E EXECUÇÃO DO CONTÊINER ---
-# "Este é o passo final. O script cria o Azure Container Instance, dizendo a ele para
-# baixar a imagem que acabamos de enviar. O mais importante é que aqui nós injetamos
-# as credenciais do banco como variáveis de ambiente, de forma segura, e alocamos
-# os recursos de CPU e memória para a aplicação rodar."
+# --- PASSO 8: CRIAR AZURE CONTAINER INSTANCE (COM A CORREÇÃO) ---
 Write-Host "========================================================" -ForegroundColor Green
-Write-Host "Criando e executando o contêiner da aplicação (ACI)..."
+Write-Host "Criando Azure Container Instance..." -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
-$DB_URL = "jdbc:postgresql://$POSTGRES_SERVER_NAME.postgres.database.azure.com:5432/$POSTGRES_DB_NAME?sslmode=require"
+
+# ===== A CORREÇÃO FINAL ESTÁ AQUI =====
+# Passamos as PEÇAS da URL, em vez da URL inteira, para evitar o bug do PowerShell.
+# O application-prod.properties deve ser ajustado para montar a URL a partir destas peças.
+$DB_HOST = "$POSTGRES_SERVER_NAME.postgres.database.azure.com"
+$DB_NAME = $POSTGRES_DB_NAME
 $DB_USER = $POSTGRES_ADMIN_USER
 $DB_PASS = $POSTGRES_ADMIN_PASSWORD
 $ACR_PASSWORD = az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv
@@ -126,13 +131,14 @@ az container create `
     --memory 1.5 `
     --environment-variables `
         "SPRING_PROFILES_ACTIVE=prod" `
-        "DB_URL=$DB_URL" `
+        "DB_HOST=$DB_HOST" `
+        "DB_NAME=$DB_NAME" `
         "DB_USER=$DB_USER" `
         "DB_PASS=$DB_PASS"
 
 # --- FINALIZAÇÃO ---
 Write-Host "========================================================" -ForegroundColor Magenta
-Write-Host "DEPLOY CONCLUIDO COM SUCESSO!"
-Write-Host "Aguarde 2-3 minutos para o conteiner iniciar completamente." -ForegroundColor Magenta
-Write-Host "Acesse sua aplicacao em: http://$DNS_NAME_LABEL.$LOCATION.azurecontainer.io:8080" -ForegroundColor Magenta
+Write-Host "DEPLOY CONCLUIDO COM SUCESSO!" -ForegroundColor Magenta
+Write-Host "Aguarde 2-3 minutos para o container iniciar." -ForegroundColor Magenta
+Write-Host "URL: http://$DNS_NAME_LABEL.$LOCATION.azurecontainer.io:8080" -ForegroundColor Magenta
 Write-Host "========================================================" -ForegroundColor Magenta
