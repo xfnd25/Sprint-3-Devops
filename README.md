@@ -21,29 +21,12 @@ Reprodutibilidade: Qualquer desenvolvedor pode recriar a infraestrutura e o ambi
 Segurança: As credenciais do banco de dados são injetadas de forma segura como variáveis de ambiente no contêiner em tempo de execução, nunca sendo expostas no código-fonte ou na imagem Docker.
 
 3. Arquitetura da Solução na Nuvem
-   O projeto utiliza uma arquitetura baseada em contêineres e serviços gerenciados (PaaS) na Azure para otimizar a portabilidade, segurança e gerenciamento.
+   O projeto utiliza uma arquitetura baseada em contêineres e serviços gerenciados (PaaS) na Azure para otimizar a portabilidade, segurança e gerenciamento. A automação é feita via Azure CLI, que orquestra a criação de todos os recursos.
 
-Snippet de código
+O fluxo se inicia na máquina do desenvolvedor, onde o Docker cria uma imagem da aplicação. Essa imagem é enviada para o Azure Container Registry (ACR), nosso repositório privado na nuvem. Em paralelo, um banco de dados Azure Database for PostgreSQL é provisionado.
 
-graph TD
-subgraph "Ambiente Local do Desenvolvedor"
-A[Desenvolvedor] -- 1. Executa script --> B(PowerShell com Azure CLI);
-B -- 2. Builda a imagem --> C{Docker};
-C -- 3. Empacota --> D[Código Java + Dependências];
-end
+Finalmente, o Azure Container Instance (ACI) é criado, recebendo a instrução para baixar a imagem do ACR e executá-la. Durante a inicialização, o ACI injeta as credenciais do banco de dados no contêiner, permitindo que a aplicação se conecte e se torne acessível ao usuário final através de uma URL pública.
 
-    subgraph "Nuvem Microsoft Azure"
-        E[Azure Container Registry (ACR)] -- 5. Armazena --> F(Imagem Docker);
-        G[Azure Database for PostgreSQL] -- 8. Persiste dados --> H{Dados};
-        I[Azure Container Instance (ACI)] -- 6. Baixa a imagem --> F;
-        I -- 7. Conecta e usa --> G;
-    end
-    
-    J[Usuário Final] -- 9. Acessa a aplicação --> I;
-    B -- 4. Envia a imagem --> E;
-
-    style A fill:#D6EAF8,stroke:#333,stroke-width:2px
-    style J fill:#D6EAF8,stroke:#333,stroke-width:2px
 Fluxo de Funcionamento:
 
 Desenvolvedor: Inicia todo o processo executando um único script PowerShell em sua máquina local.
@@ -90,18 +73,23 @@ Clone este repositório:
 
 git clone [SEU_LINK_DO_GITHUB_AQUI]
 cd [NOME_DA_PASTA_DO_PROJETO]
+
+
 Abra o PowerShell e navegue até a pasta do projeto.
 
 Execute o Script de Deploy:
 O script irá verificar se o Docker está rodando, pedir seu login na Azure, destruir qualquer ambiente antigo, criar todos os recursos na nuvem (PostgreSQL, ACR), construir a imagem Docker localmente, enviá-la para o ACR e, finalmente, criar o ACI para rodar a aplicação.
 
 ./deploy-container.ps1
+
+
 Aguarde a execução completa (pode levar de 15 a 25 minutos, principalmente na criação do banco e no envio da imagem Docker).
 
 Acesso e Credenciais (Após o Deploy)
 URL da Aplicação: Será exibida no final da execução do script (ex: http://motolocation-app-555317-xxxx.brazilsouth.azurecontainer.io:8080).
 
 Credenciais de Login:
+
 Administrador:
 Usuário: admin
 Senha: admin
@@ -113,3 +101,4 @@ Senha: user
 O próprio script deploy-container.ps1 já executa a limpeza no início de cada execução. No entanto, se você quiser apagar todos os recursos criados na Azure a qualquer momento e evitar custos, execute o seguinte comando no PowerShell (após logar com az login):
 
 az group delete --name rg-container-sprint3-555317 --yes
+
