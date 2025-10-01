@@ -16,7 +16,6 @@ Reprodutibilidade: Qualquer desenvolvedor pode recriar a infraestrutura e o ambi
 Segurança: As credenciais do banco de dados são injetadas de forma segura como variáveis de ambiente no contêiner em tempo de execução, nunca sendo expostas no código-fonte ou na imagem Docker.
 
 4. Arquitetura da Solução na Nuvem
-5. 
 O projeto utiliza uma arquitetura baseada em contêineres e serviços gerenciados (PaaS) na Azure para otimizar a portabilidade, segurança e gerenciamento. A automação é feita via Azure CLI, que orquestra a criação de todos os recursos.
 O fluxo se inicia na máquina do desenvolvedor, onde o Docker cria uma imagem da aplicação. Essa imagem é enviada para o Azure Container Registry (ACR), nosso repositório privado na nuvem. Em paralelo, um banco de dados Azure Database for PostgreSQL é provisionado.
 Finalmente, o Azure Container Instance (ACI) é criado, recebendo a instrução para baixar a imagem do ACR e executá-la. Durante a inicialização, o ACI injeta as credenciais do banco de dados no contêiner, permitindo que a aplicação se conecte e se torne acessível ao usuário final através de uma URL pública.
