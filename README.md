@@ -74,7 +74,7 @@ Este guia descreve como provisionar toda a infraestrutura na Azure e publicar a 
 
 1.  **Clone este repositório:**
     ```bash
-    git clone https://github.com/xfnd25/Sprint-3-Devops/edit/main/README.md
+    git clone https://github.com/xfnd25/Sprint-3-Devops
     cd Sprint-3-Devops
     ```
 
