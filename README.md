@@ -74,8 +74,8 @@ Este guia descreve como provisionar toda a infraestrutura na Azure e publicar a 
 
 1.  **Clone este repositório:**
     ```bash
-    git clone [SEU_LINK_DO_GITHUB_AQUI]
-    cd [NOME_DA_PASTA_DO_PROJETO]
+    git clone https://github.com/xfnd25/Sprint-3-Devops/edit/main/README.md
+    cd Sprint-3-Devops
     ```
 
 2.  **Abra o PowerShell** e navegue até a pasta do projeto.
